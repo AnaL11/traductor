@@ -3,7 +3,7 @@ let model;
 window.onload = async () => {
   // Cargar modelo
   model = await tf.loadGraphModel('model/model.json');
-  console.log("✅ Modelo cargado.");
+  console.log(" Modelo cargado.");
 
   // Iniciar cámara
   const video = document.getElementById("video");
