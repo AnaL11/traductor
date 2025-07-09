@@ -1,33 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Traductor Braille Pop it</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traductor Braille con Pop Its</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>Traductor de Braille con Pop Its</h1>
-    <p>Sube una imagen o usa tu cámara para traducir letras Braille.</p>
+    <h1>Traductor de Braille con Cámara</h1>
+    <p>Captura una imagen del patrón Braille en pop its y escucha la letra traducida.</p>
   </header>
 
   <main>
-    <section id="upload-section">
-      <label for="imageInput">Selecciona una imagen:</label>
-      <input type="file" id="imageInput" accept="image/*" />
-      <button id="predictBtn">Traducir Braille</button>
+    <section>
+      <video id="video" width="300" autoplay></video><br>
+      <button id="capture">Capturar Foto</button>
+      <canvas id="canvas" width="224" height="224" style="display: none;"></canvas>
     </section>
 
-    <section id="result-section" aria-live="polite">
+    <section>
       <h2>Letra detectada:</h2>
       <div id="result">Esperando imagen...</div>
     </section>
   </main>
-
-  <footer>
-    <p>Página accesible diseñada por Ana Lozano - Proyecto de traducción Braille</p>
-  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
   <script src="script.js"></script>
