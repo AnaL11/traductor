@@ -1,30 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Traductor Braille con Pop Its</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Traductor Braille con TensorFlow</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f4f4f4; padding: 20px; }
+    video { border: 2px solid #000; border-radius: 10px; max-width: 400px; width: 100%; }
+    button { margin-top: 15px; padding: 10px 20px; font-size: 1em; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Traductor de Braille con Cámara</h1>
-    <p>Captura una imagen del patrón Braille en pop its y escucha la letra traducida.</p>
-  </header>
+  <h1>Traductor Braille con Pop Its</h1>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas" width="224" height="224" style="display:none;"></canvas>
+  <div>
+    <button onclick="captureAndPredict()">Capturar y traducir</button>
+  </div>
+  <h2 id="output">Esperando captura...</h2>
 
-  <main>
-    <section>
-      <video id="video" width="300" autoplay></video><br>
-      <button id="capture">Capturar Foto</button>
-      <canvas id="canvas" width="224" height="224" style="display: none;"></canvas>
-    </section>
-
-    <section>
-      <h2>Letra detectada:</h2>
-      <div id="result">Esperando imagen...</div>
-    </section>
-  </main>
-
+  <!-- TensorFlow.js -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
   <script src="script.js"></script>
 </body>
