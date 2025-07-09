@@ -7,18 +7,18 @@
     body { font-family: sans-serif; text-align: center; background: #f4f4f4; padding: 20px; }
     video { border: 2px solid #000; border-radius: 10px; max-width: 400px; width: 100%; }
     button { margin-top: 15px; padding: 10px 20px; font-size: 1em; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    h2 { margin-top: 20px; }
   </style>
 </head>
 <body>
   <h1>Traductor Braille con Pop Its</h1>
   <video id="video" autoplay playsinline></video>
-  <canvas id="canvas" width="224" height="224" style="display:none;"></canvas>
+  <canvas id="canvas" style="display:none;"></canvas>
   <div>
     <button onclick="captureAndPredict()">Capturar y traducir</button>
   </div>
   <h2 id="output">Esperando captura...</h2>
 
-  <!-- TensorFlow.js -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
   <script src="script.js"></script>
 </body>
