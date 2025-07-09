@@ -40,7 +40,7 @@ function preprocessImage(img) {
 }
 
 function getLetterFromPrediction(prediction) {
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
   const maxIdx = prediction.indexOf(Math.max(...prediction));
   return alphabet[maxIdx];
 }
