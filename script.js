@@ -1,64 +1,53 @@
 let model;
 
 window.onload = async () => {
+  // Cargar modelo
   model = await tf.loadGraphModel('model/model.json');
-  console.log("Modelo cargado.");
+  console.log("✅ Modelo cargado.");
+
+  // Iniciar cámara
+  const video = document.getElementById("video");
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+      video.srcObject = stream;
+    })
+    .catch((err) => {
+      alert("Error al acceder a la cámara: " + err.message);
+    });
+
+  // Captura de imagen
+  document.getElementById("capture").addEventListener("click", async () => {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, 224, 224);
+
+    const imageTensor = tf.browser.fromPixels(canvas).expandDims(0).toFloat().div(255);
+    const prediction = await model.predict(imageTensor).data();
+    const letter = getLetterFromPrediction(prediction);
+
+    document.getElementById("result").innerText = letter;
+    speak(letter);
+  });
 };
 
-document.getElementById("predictBtn").addEventListener("click", async () => {
-  const fileInput = document.getElementById("imageInput");
-  if (!fileInput.files[0]) return alert("Selecciona una imagen");
-
-  const image = await loadImage(fileInput.files[0]);
-  const tensor = preprocessImage(image);
-  const prediction = await model.predict(tensor).data();
-
-  const predictedLetter = getLetterFromPrediction(prediction);
-  document.getElementById("result").innerText = predictedLetter;
-
-  speak(predictedLetter);
-});
-
-function loadImage(file) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.src = reader.result;
-      img.onload = () => resolve(img);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function preprocessImage(img) {
-  return tf.tidy(() => {
-    let tensor = tf.browser.fromPixels(img).resizeNearestNeighbor([224, 224]).toFloat();
-    tensor = tensor.div(255.0).expandDims(0);
-    return tensor;
-  });
-}
-
+// Mapea índices a letras, incluyendo letras con tilde y ñ
 function getLetterFromPrediction(prediction) {
-  const alphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
-  const maxIdx = prediction.indexOf(Math.max(...prediction));
-  return alphabet[maxIdx];
+  const alphabet = "AÁBCDEÉFGHIÍJKLMNÑOÓPQRSTUÚVWXYZ";
+  const maxIndex = prediction.indexOf(Math.max(...prediction));
+  return alphabet[maxIndex] || "?";
 }
 
 function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'es-MX'; // Español latinoamericano
-  utterance.rate = 1;
-  utterance.pitch = 1;
+  utterance.lang = 'es-MX';
 
-  // Buscar voz en español latino
   const voices = window.speechSynthesis.getVoices();
-  const spanishVoice = voices.find(voice =>
-    voice.lang.startsWith('es') && (voice.name.toLowerCase().includes('mexico') || voice.name.toLowerCase().includes('latino'))
+  const selectedVoice = voices.find(v =>
+    v.lang.startsWith('es') && (v.name.toLowerCase().includes('mexico') || v.name.toLowerCase().includes('latino'))
   );
 
-  if (spanishVoice) {
-    utterance.voice = spanishVoice;
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
   }
 
   window.speechSynthesis.speak(utterance);
