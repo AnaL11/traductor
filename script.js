@@ -20,11 +20,30 @@ async function loadModel() {
 }
 
 async function captureAndPredict() {
-  // Ajusta canvas al tamaño del video
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  let img = tf.browser.fromPixels(canvas)
+    .resizeNearestNeighbor([224, 224])
+    .toFloat()
+    .div(255.0)
+    .expandDims(0);
+
+  let prediction = await model.predict(img);
+  let index = prediction.argMax(-1).dataSync()[0];
+
+  let letter = getLetterFromIndex(index);
+
+  // ⚠️ Verifica si la predicción es inválida
+  if (letter === "?") {
+    output.innerText = "No se detectó un patrón válido.";
+    speak("Lo que estás mostrando no parece un pop-it válido. Intenta de nuevo.");
+  } else {
+    output.innerText = `Letra detectada: ${letter}`;
+    speak(`La letra es ${letter}`);
+  }
+}
 
   // Procesa imagen a 224x224 como en tu modelo
   let img = tf.browser.fromPixels(canvas)
