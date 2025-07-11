@@ -14,20 +14,20 @@ const letterCountInput = document.getElementById('letterCount');
 const output = document.getElementById('output');
 const instructions = document.getElementById('instructions');
 
-// Umbral de confianza para aceptar predicción
-const CONFIDENCE_THRESHOLD = 0.3;
-
+// Voz en español
 function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "es-MX";
   speechSynthesis.speak(utterance);
 }
 
+// Mapeo de clases a letras del dataset
 function getLetterFromIndex(index) {
   const letras = "AÁBCDEÉFGHIÍJKLMNÑOÓPQRSTUÚVWXYZ";
   return letras[index] || "?";
 }
 
+// Activar cámara trasera
 async function startCamera() {
   try {
     if (stream) {
@@ -56,6 +56,7 @@ async function startCamera() {
   }
 }
 
+// Detener cámara
 function stopCamera() {
   if (stream && stream.getTracks) {
     stream.getTracks().forEach(track => track.stop());
@@ -63,15 +64,17 @@ function stopCamera() {
   streamStarted = false;
 }
 
+// Cargar modelo de TensorFlow
 async function loadModel() {
   try {
     model = await tf.loadGraphModel('model/model.json');
-    console.log("Modelo cargado.");
+    console.log("✅ Modelo cargado.");
   } catch (err) {
-    console.error("Error al cargar el modelo:", err);
+    console.error("❌ Error al cargar el modelo:", err);
   }
 }
 
+// Predecir palabra desde imagen
 async function predictWordFromImage(numLetters) {
   if (!streamStarted) {
     speak("Primero debes activar la cámara.");
@@ -89,12 +92,15 @@ async function predictWordFromImage(numLetters) {
   capturedImage.src = dataURL;
   capturedImage.style.display = 'block';
 
-  const segmentWidth = Math.floor(canvas.width / numLetters);
   let word = [];
-  let uncertainLetters = 0;
 
   for (let i = 0; i < numLetters; i++) {
-    let imageData = ctx.getImageData(i * segmentWidth, 0, segmentWidth, canvas.height);
+    // Recorte cuadrado centrado
+    let side = Math.min(canvas.width, canvas.height) * 0.6;
+    let x = (canvas.width - side) / 2;
+    let y = (canvas.height - side) / 2;
+    let imageData = ctx.getImageData(x, y, side, side);
+
     let imgTensor = tf.browser.fromPixels(imageData)
       .resizeNearestNeighbor([224, 224])
       .toFloat()
@@ -105,45 +111,36 @@ async function predictWordFromImage(numLetters) {
     let probs = prediction.dataSync();
     let index = prediction.argMax(-1).dataSync()[0];
 
-    const confidence = probs[index];
-    if (confidence < CONFIDENCE_THRESHOLD) {
+    if (probs[index] < 0.4) {
       word.push("?");
-      uncertainLetters++;
     } else {
       word.push(getLetterFromIndex(index));
     }
-
-    console.log(`Letra ${i + 1}: ${getLetterFromIndex(index)} - Confianza: ${confidence.toFixed(3)}`);
   }
 
   const finalWord = word.join('');
-  output.innerText = `Palabra detectada: ${finalWord}`;
+  output.innerText = Palabra detectada: ${finalWord};
 
-  if (uncertainLetters === numLetters) {
+  if (word.every(letter => letter === "?")) {
     output.innerText = "No se detectó un pop-it válido.";
     speak("No se detectó un pop-it válido. Intenta de nuevo.");
-  } else if (uncertainLetters > 0) {
-    speak(`La palabra es ${finalWord}. Algunas letras no fueron reconocidas claramente, por favor intenta de nuevo si no es correcta.`);
   } else {
-    speak(`La palabra es ${finalWord}`);
+    speak(La palabra es ${finalWord});
   }
 
   resetBtn.disabled = false;
   captureBtn.disabled = true;
 }
 
+// Botones
 startBtn.addEventListener('click', () => {
   startCamera();
   startBtn.disabled = true;
 });
 
 captureBtn.addEventListener('click', () => {
-  const numLetters = parseInt(letterCountInput.value, 10);
-  if (isNaN(numLetters) || numLetters < 1) {
-    speak("Por favor, indica un número válido de letras.");
-    return;
-  }
-  predictWordFromImage(numLetters);
+  // Puedes permitir varios caracteres, pero para prueba usa 1
+  predictWordFromImage(1);
 });
 
 resetBtn.addEventListener('click', async () => {
@@ -159,4 +156,5 @@ resetBtn.addEventListener('click', async () => {
   startBtn.disabled = true;
 });
 
+// Cargar modelo al inicio
 loadModel();
