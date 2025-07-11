@@ -92,14 +92,11 @@ async function predictWordFromImage(numLetters) {
     let index = prediction.argMax(-1).dataSync()[0];
 
     if (probs[index] < 0.6) {
-      output.innerText = "Letra no reconocida. Intenta de nuevo.";
-      speak("Letra no reconocida. Intenta de nuevo.");
-      return;
+      word.push("?"); // aún se guarda para decirle que no se reconoció bien
+    } else {
+      let letter = getLetterFromIndex(index);
+      word.push(letter);
     }
-
-    let letter = getLetterFromIndex(index);
-    word.push(letter);
-  }
 
   const finalWord = word.join('');
   output.innerText = `Palabra detectada: ${finalWord}`;
