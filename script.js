@@ -14,20 +14,20 @@ const letterCountInput = document.getElementById('letterCount');
 const output = document.getElementById('output');
 const instructions = document.getElementById('instructions');
 
-// Voz en español
+// Umbral de confianza para aceptar predicción
+const CONFIDENCE_THRESHOLD = 0.3;
+
 function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "es-MX";
   speechSynthesis.speak(utterance);
 }
 
-// Mapeo de clases a letras del dataset
 function getLetterFromIndex(index) {
   const letras = "AÁBCDEÉFGHIÍJKLMNÑOÓPQRSTUÚVWXYZ";
   return letras[index] || "?";
 }
 
-// Activar cámara trasera
 async function startCamera() {
   try {
     if (stream) {
@@ -56,7 +56,6 @@ async function startCamera() {
   }
 }
 
-// Detener cámara
 function stopCamera() {
   if (stream && stream.getTracks) {
     stream.getTracks().forEach(track => track.stop());
@@ -64,17 +63,15 @@ function stopCamera() {
   streamStarted = false;
 }
 
-// Cargar modelo de TensorFlow
 async function loadModel() {
   try {
     model = await tf.loadGraphModel('model/model.json');
-    console.log("✅ Modelo cargado.");
+    console.log("Modelo cargado.");
   } catch (err) {
-    console.error("❌ Error al cargar el modelo:", err);
+    console.error("Error al cargar el modelo:", err);
   }
 }
 
-// Predecir palabra desde imagen
 async function predictWordFromImage(numLetters) {
   if (!streamStarted) {
     speak("Primero debes activar la cámara.");
@@ -94,6 +91,7 @@ async function predictWordFromImage(numLetters) {
 
   const segmentWidth = Math.floor(canvas.width / numLetters);
   let word = [];
+  let uncertainLetters = 0;
 
   for (let i = 0; i < numLetters; i++) {
     let imageData = ctx.getImageData(i * segmentWidth, 0, segmentWidth, canvas.height);
@@ -107,19 +105,25 @@ async function predictWordFromImage(numLetters) {
     let probs = prediction.dataSync();
     let index = prediction.argMax(-1).dataSync()[0];
 
-    if (probs[index] < 0.6) {
+    const confidence = probs[index];
+    if (confidence < CONFIDENCE_THRESHOLD) {
       word.push("?");
+      uncertainLetters++;
     } else {
       word.push(getLetterFromIndex(index));
     }
+
+    console.log(`Letra ${i + 1}: ${getLetterFromIndex(index)} - Confianza: ${confidence.toFixed(3)}`);
   }
 
   const finalWord = word.join('');
   output.innerText = `Palabra detectada: ${finalWord}`;
 
-  if (word.every(letter => letter === "?")) {
+  if (uncertainLetters === numLetters) {
     output.innerText = "No se detectó un pop-it válido.";
     speak("No se detectó un pop-it válido. Intenta de nuevo.");
+  } else if (uncertainLetters > 0) {
+    speak(`La palabra es ${finalWord}. Algunas letras no fueron reconocidas claramente, por favor intenta de nuevo si no es correcta.`);
   } else {
     speak(`La palabra es ${finalWord}`);
   }
@@ -128,7 +132,6 @@ async function predictWordFromImage(numLetters) {
   captureBtn.disabled = true;
 }
 
-// Botones
 startBtn.addEventListener('click', () => {
   startCamera();
   startBtn.disabled = true;
@@ -156,5 +159,4 @@ resetBtn.addEventListener('click', async () => {
   startBtn.disabled = true;
 });
 
-// Cargar modelo al inicio
 loadModel();
