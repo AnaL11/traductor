@@ -122,13 +122,13 @@ async function predictWordFromImage(numLetters) {
   }
 
   const finalWord = word.join('');
-  output.innerText = Palabra detectada: ${finalWord};
+  output.innerText = `Palabra detectada: ${finalWord}`;
 
   if (word.every(letter => letter === "?")) {
     output.innerText = "No se detectó un pop-it válido.";
     speak("No se detectó un pop-it válido. Intenta de nuevo.");
   } else {
-    speak(La palabra es ${finalWord});
+    speak(`La palabra es ${finalWord}`);
   }
 
   resetBtn.disabled = false;
@@ -165,3 +165,4 @@ resetBtn.addEventListener('click', async () => {
 
 // Cargar modelo al inicio
 loadModel();
+
