@@ -35,11 +35,13 @@ async function startCamera() {
     }
 
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
+      video: { facingMode: { ideal: "environment" } }, // ← Esto puede fallar en algunos dispositivos si no es compatible
       audio: false
     });
 
     video.srcObject = stream;
+    video.play();
+
     video.style.display = 'block';
     canvas.style.display = 'none';
     capturedImage.style.display = 'none';
@@ -51,8 +53,8 @@ async function startCamera() {
     instructions.innerText = "Coloca el pop-it en el centro y presiona Capturar palabra.";
     speak("Coloca el pop-it en el centro y presiona Capturar palabra.");
   } catch (err) {
-    alert("No se pudo activar la cámara trasera.");
-    console.error(err);
+    alert("No se pudo activar la cámara.");
+    console.error("Error activando cámara:", err);
   }
 }
 
@@ -96,22 +98,23 @@ async function predictWordFromImage(numLetters) {
 
   for (let i = 0; i < numLetters; i++) {
     // Recorte cuadrado centrado
-    let side = Math.min(canvas.width, canvas.height) * 0.6;
-    let x = (canvas.width - side) / 2;
-    let y = (canvas.height - side) / 2;
-    let imageData = ctx.getImageData(x, y, side, side);
+    const side = Math.min(canvas.width, canvas.height) * 0.6;
+    const x = (canvas.width - side) / 2;
+    const y = (canvas.height - side) / 2;
 
-    let imgTensor = tf.browser.fromPixels(imageData)
+    const imageData = ctx.getImageData(x, y, side, side);
+
+    const imgTensor = tf.browser.fromPixels(imageData)
       .resizeNearestNeighbor([224, 224])
       .toFloat()
       .div(255.0)
       .expandDims(0);
 
-    let prediction = await model.predict(imgTensor);
-    let probs = prediction.dataSync();
-    let index = prediction.argMax(-1).dataSync()[0];
+    const prediction = await model.predict(imgTensor);
+    const probs = prediction.dataSync();
+    const index = prediction.argMax(-1).dataSync()[0];
 
-    if (probs[index] < 0.4) {
+    if (probs[index] < 0.5) {
       word.push("?");
     } else {
       word.push(getLetterFromIndex(index));
@@ -139,8 +142,12 @@ startBtn.addEventListener('click', () => {
 });
 
 captureBtn.addEventListener('click', () => {
-  // Puedes permitir varios caracteres, pero para prueba usa 1
-  predictWordFromImage(1);
+  const numLetters = parseInt(letterCountInput.value, 10);
+  if (isNaN(numLetters) || numLetters < 1) {
+    speak("Por favor, indica un número válido de letras.");
+    return;
+  }
+  predictWordFromImage(numLetters);
 });
 
 resetBtn.addEventListener('click', async () => {
