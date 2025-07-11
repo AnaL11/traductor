@@ -21,7 +21,7 @@ function speak(text) {
   speechSynthesis.speak(utterance);
 }
 
-// Mapear índices a letras del dataset
+// Mapeo de clases a letras del dataset
 function getLetterFromIndex(index) {
   const letras = "AÁBCDEÉFGHIÍJKLMNÑOÓPQRSTUÚVWXYZ";
   return letras[index] || "?";
@@ -68,9 +68,9 @@ function stopCamera() {
 async function loadModel() {
   try {
     model = await tf.loadGraphModel('model/model.json');
-    console.log("Modelo cargado.");
+    console.log("✅ Modelo cargado.");
   } catch (err) {
-    console.error("Error al cargar el modelo:", err);
+    console.error("❌ Error al cargar el modelo:", err);
   }
 }
 
@@ -114,19 +114,19 @@ async function predictWordFromImage(numLetters) {
     }
   }
 
-const finalWord = word.join('');
-output.innerText = `Palabra detectada: ${finalWord}`;
+  const finalWord = word.join('');
+  output.innerText = `Palabra detectada: ${finalWord}`;
 
-// Si TODAS las letras son desconocidas ("?")
-if (word.every(letter => letter === "?")) {
-  output.innerText = "No se detectó un pop-it válido.";
-  speak("No se detectó un pop-it válido. Intenta de nuevo.");
-} else {
-  speak(`La palabra es ${finalWord}`);
+  if (word.every(letter => letter === "?")) {
+    output.innerText = "No se detectó un pop-it válido.";
+    speak("No se detectó un pop-it válido. Intenta de nuevo.");
+  } else {
+    speak(`La palabra es ${finalWord}`);
+  }
+
+  resetBtn.disabled = false;
+  captureBtn.disabled = true;
 }
-
-resetBtn.disabled = false;
-captureBtn.disabled = true;
 
 // Botones
 startBtn.addEventListener('click', () => {
