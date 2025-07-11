@@ -8,15 +8,20 @@ async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
+    console.log("✅ Cámara iniciada");
   } catch (err) {
     alert("Error al acceder a la cámara.");
-    console.error(err);
+    console.error("❌ Error al iniciar la cámara:", err);
   }
 }
 
 async function loadModel() {
-  model = await tf.loadGraphModel('model/model.json');
-  console.log("✅ Modelo cargado.");
+  try {
+    model = await tf.loadGraphModel('model/model.json');
+    console.log("✅ Modelo cargado.");
+  } catch (err) {
+    console.error("❌ Error al cargar el modelo:", err);
+  }
 }
 
 async function captureAndPredict() {
@@ -35,7 +40,6 @@ async function captureAndPredict() {
 
   let letter = getLetterFromIndex(index);
 
-  // ⚠️ Verifica si la predicción es inválida
   if (letter === "?") {
     output.innerText = "No se detectó un patrón válido.";
     speak("Lo que estás mostrando no parece un pop-it válido. Intenta de nuevo.");
@@ -45,22 +49,6 @@ async function captureAndPredict() {
   }
 }
 
-  // Procesa imagen a 224x224 como en tu modelo
-  let img = tf.browser.fromPixels(canvas)
-    .resizeNearestNeighbor([224, 224])
-    .toFloat()
-    .div(255.0)
-    .expandDims(0);
-
-  let prediction = await model.predict(img);
-  let index = prediction.argMax(-1).dataSync()[0];
-
-  let letter = getLetterFromIndex(index);
-  output.innerText = `Letra detectada: ${letter}`;
-  speak(`La letra es ${letter}`);
-}
-
-// Mapea clases a letras (ajusta según tu dataset)
 function getLetterFromIndex(index) {
   const letras = "AÁBCDEÉFGHIÍJKLMNÑOÓPQRSTUÚVWXYZ";
   return letras[index] || "?";
@@ -72,5 +60,6 @@ function speak(text) {
   speechSynthesis.speak(utterance);
 }
 
+// Ejecutar funciones principales
 startCamera();
 loadModel();
