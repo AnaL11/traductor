@@ -14,20 +14,17 @@ const letterCountInput = document.getElementById('letterCount');
 const output = document.getElementById('output');
 const instructions = document.getElementById('instructions');
 
-// Voz en español
-function speak(text) {
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "es-419"; // Español latinoamericano
+function speak(texto) {
+  const utterance = new SpeechSynthesisUtterance(texto);
+  utterance.lang = "es-MX";
   speechSynthesis.speak(utterance);
 }
 
-// Letras del dataset
 function getLetterFromIndex(index) {
   const letras = "AÁBCDEÉFGHIÍJKLMNÑOÓPQRSTUÚVWXYZ";
   return letras[index] || "?";
 }
 
-// Activar cámara trasera
 async function startCamera() {
   try {
     if (stream) {
@@ -48,15 +45,14 @@ async function startCamera() {
     captureBtn.disabled = false;
     resetBtn.disabled = true;
 
-    instructions.innerText = "Coloca el pop-it en el centro y presiona Capturar palabra.";
-    speak("Coloca el pop-it en el centro y presiona Capturar palabra.");
+    instructions.innerText = "Coloca el pop-it al centro y presiona Capturar palabra.";
+    speak("Coloca el pop-it al centro y presiona Capturar palabra.");
   } catch (err) {
-    alert("No se pudo activar la cámara trasera.");
+    alert("No se pudo activar la cámara.");
     console.error(err);
   }
 }
 
-// Detener cámara
 function stopCamera() {
   if (stream && stream.getTracks) {
     stream.getTracks().forEach(track => track.stop());
@@ -64,7 +60,6 @@ function stopCamera() {
   streamStarted = false;
 }
 
-// Cargar modelo TensorFlow.js
 async function loadModel() {
   try {
     model = await tf.loadGraphModel('model/model.json');
@@ -74,16 +69,25 @@ async function loadModel() {
   }
 }
 
-// Predecir palabra desde imagen
 async function predictWordFromImage(numLetters) {
   if (!streamStarted) {
-    speak("Primero debes activar la cámara.");
+    speak("Primero activa la cámara.");
     return;
   }
 
+  // Reducimos altura del canvas al 20% para centrarnos en el área inferior
+  const cropPercent = 0.2;
+  const newHeight = Math.floor(video.videoHeight * cropPercent);
   canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  canvas.height = newHeight;
+
+  ctx.drawImage(
+    video,
+    0, video.videoHeight - newHeight,
+    video.videoWidth, newHeight,
+    0, 0,
+    canvas.width, canvas.height
+  );
 
   stopCamera();
   video.style.display = 'none';
@@ -93,17 +97,10 @@ async function predictWordFromImage(numLetters) {
   capturedImage.style.display = 'block';
 
   const segmentWidth = Math.floor(canvas.width / numLetters);
-  const segmentHeight = Math.floor(canvas.height * 0.2); // solo 20% vertical
-
-  const startY = Math.floor((canvas.height - segmentHeight) / 2);
-
   let palabra = [];
 
   for (let i = 0; i < numLetters; i++) {
-    const startX = i * segmentWidth;
-
-    const imageData = ctx.getImageData(startX, startY, segmentWidth, segmentHeight);
-
+    const imageData = ctx.getImageData(i * segmentWidth, 0, segmentWidth, canvas.height);
     const imgTensor = tf.browser.fromPixels(imageData)
       .resizeNearestNeighbor([224, 224])
       .toFloat()
@@ -121,21 +118,19 @@ async function predictWordFromImage(numLetters) {
     }
   }
 
-  const resultado = palabra.join('');
-  output.innerText = `Palabra detectada: ${resultado}`;
-
+  const palabraFinal = palabra.join('');
   if (palabra.every(l => l === "?")) {
     output.innerText = "No se detectó un pop-it válido.";
     speak("No se detectó un pop-it válido. Intenta de nuevo.");
   } else {
-    speak(`La palabra es ${resultado}`);
+    output.innerText = `Palabra detectada: ${palabraFinal}`;
+    speak(`La palabra es ${palabraFinal}`);
   }
 
   resetBtn.disabled = false;
   captureBtn.disabled = true;
 }
 
-// Botones
 startBtn.addEventListener('click', () => {
   startCamera();
   startBtn.disabled = true;
@@ -155,7 +150,6 @@ resetBtn.addEventListener('click', async () => {
   output.innerText = "Esperando...";
   instructions.innerText = "Reiniciando cámara...";
   speak("Puedes capturar otra palabra.");
-
   await startCamera();
 
   captureBtn.disabled = false;
@@ -163,5 +157,4 @@ resetBtn.addEventListener('click', async () => {
   startBtn.disabled = true;
 });
 
-// Cargar modelo al inicio
 loadModel();
