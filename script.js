@@ -122,15 +122,21 @@ captureBtn.addEventListener('click', () => {
   predictWordFromImage(numLetters);
 });
 
-resetBtn.addEventListener('click', () => {
-  startBtn.disabled = false;
-  captureBtn.disabled = true;
-  resetBtn.disabled = true;
+resetBtn.addEventListener('click', async () => {
+  // Reiniciar interfaz
   capturedImage.style.display = 'none';
   output.innerText = "Esperando...";
-  instructions.innerText = "Presiona Activar cámara trasera para comenzar.";
-  speak("Puedes tomar otra foto. Presiona Activar cámara trasera para empezar.");
+  instructions.innerText = "Reiniciando cámara...";
+  speak("Listo. Puedes capturar otra palabra.");
+
+  // Reactivar cámara trasera
+  await startCamera();
+
+  // Reactivar botones
+  captureBtn.disabled = false;
+  resetBtn.disabled = true;
 });
+
 
 // Cargar modelo al inicio
 async function loadModel() {
