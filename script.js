@@ -8,19 +8,19 @@ async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
-    console.log("✅ Cámara iniciada");
+    console.log("Cámara iniciada");
   } catch (err) {
     alert("Error al acceder a la cámara.");
-    console.error("❌ Error al iniciar la cámara:", err);
+    console.error("Error al iniciar la cámara:", err);
   }
 }
 
 async function loadModel() {
   try {
     model = await tf.loadGraphModel('model/model.json');
-    console.log("✅ Modelo cargado.");
+    console.log("Modelo cargado.");
   } catch (err) {
-    console.error("❌ Error al cargar el modelo:", err);
+    console.error("Error al cargar el modelo:", err);
   }
 }
 
