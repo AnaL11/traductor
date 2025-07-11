@@ -123,19 +123,31 @@ captureBtn.addEventListener('click', () => {
 });
 
 resetBtn.addEventListener('click', async () => {
-  // Reiniciar interfaz
   capturedImage.style.display = 'none';
   output.innerText = "Esperando...";
   instructions.innerText = "Reiniciando cámara...";
-  speak("Listo. Puedes capturar otra palabra.");
+  speak("Puedes capturar otra palabra.");
 
-  // Reactivar cámara trasera
-  await startCamera();
+  // Volver a activar cámara trasera
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: "environment" } },
+      audio: false
+    });
+    video.srcObject = stream;
+    video.style.display = 'block';
 
-  // Reactivar botones
-  captureBtn.disabled = false;
-  resetBtn.disabled = true;
+    captureBtn.disabled = false;
+    resetBtn.disabled = true;
+    startBtn.disabled = true;
+    instructions.innerText = "Coloca la palabra y presiona Capturar.";
+    speak("Coloca la palabra y presiona Capturar.");
+  } catch (err) {
+    alert("No se pudo volver a iniciar la cámara.");
+    console.error(err);
+  }
 });
+
 
 
 // Cargar modelo al inicio
